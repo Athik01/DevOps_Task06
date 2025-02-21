@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "mohamedathikr/my-node-app:latest"
+        // Update this to the full path of your deployment YAML if necessary.
         K8S_DEPLOYMENT = "Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml"
     }
 
@@ -10,7 +11,7 @@ pipeline {
         stage('Cleanup Workspace') {
             steps {
                 echo "🧹 Cleaning workspace..."
-                cleanWs()
+                cleanWs() // Cleans workspace before fetching new code
             }
         }
 
@@ -51,21 +52,24 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    echo "🚀 Deploying to Kubernetes..."
-                    powershell """
-                        kubectl apply -f $K8S_DEPLOYMENT --validate=false
-                        kubectl get pods
-                    """
-                }
+                bat '''
+                REM Set the KUBECONFIG environment variable to point to your kubeconfig file
+                set KUBECONFIG=%USERPROFILE%\\.kube\\config
+                REM Optionally, switch to your desired Kubernetes context (adjust "docker-desktop" if needed)
+                kubectl config use-context docker-desktop
+                REM Apply the deployment file without validation (to bypass openapi issues if necessary)
+                kubectl apply -f Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml --validate=false
+                kubectl get pods
+                '''
             }
         }
 
         stage('Verify Deployment') {
             steps {
                 script {
-                    echo "✅ Verifying Kubernetes Deployment..."
+                    echo "Verifying Kubernetes Deployment..."
                     powershell """
+                        echo 'Listing Pods...'
                         kubectl get pods
                     """
                 }
