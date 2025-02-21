@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "mohamedathikr/my-node-app:latest"
-        // Update this to the full path of your deployment YAML if necessary.
+        // Deployment YAML file path
         K8S_DEPLOYMENT = "Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml"
     }
 
@@ -11,7 +11,7 @@ pipeline {
         stage('Cleanup Workspace') {
             steps {
                 echo "🧹 Cleaning workspace..."
-                cleanWs() // Cleans workspace before fetching new code
+                cleanWs()
             }
         }
 
@@ -52,27 +52,30 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat '''
-                REM Set the KUBECONFIG environment variable to point to your kubeconfig file
-                set KUBECONFIG=%USERPROFILE%\\.kube\\config
-                REM Optionally, switch to your desired Kubernetes context (adjust "docker-desktop" if needed)
-                kubectl config use-context docker-desktop
-                REM Apply the deployment file without validation (to bypass openapi issues if necessary)
-                kubectl apply -f Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml --validate=false
-                kubectl get pods
+                powershell '''
+                    # Set KUBECONFIG to your valid kubeconfig file
+                    $env:KUBECONFIG = "C:\\Users\\rathi\\.kube\\config"
+                    echo "Using kubeconfig: $env:KUBECONFIG"
+
+                    # List available contexts for verification
+                    kubectl config get-contexts
+
+                    # If needed, switch to your desired context (replace <your-context> with the actual name)
+                    # kubectl config use-context <your-context>
+
+                    # Apply the deployment YAML without validation
+                    kubectl apply -f "$env:K8S_DEPLOYMENT" --validate=false
+                    kubectl get pods
                 '''
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                script {
+                powershell '''
                     echo "Verifying Kubernetes Deployment..."
-                    powershell """
-                        echo 'Listing Pods...'
-                        kubectl get pods
-                    """
-                }
+                    kubectl get pods
+                '''
             }
         }
     }
