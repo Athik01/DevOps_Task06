@@ -3,15 +3,14 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "mohamedathikr/my-node-app:latest"
-        K8S_DEPLOYMENT = "node-app-deployment.yaml"
-        K8S_SERVICE = "node-app-service.yaml"
+        K8S_DEPLOYMENT = "Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml"
     }
 
     stages {
         stage('Cleanup Workspace') {
             steps {
                 echo "🧹 Cleaning workspace..."
-                cleanWs() // Cleans workspace before fetching new code
+                cleanWs()
             }
         }
 
@@ -23,17 +22,16 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-    steps {
-        script {
-            echo "🐳 Building Docker Image: $env.DOCKER_IMAGE"
-            powershell """
-                echo '🚀 Starting Docker Build...'
-                docker build -t mohamedathikr/my-node-app:latest -f Responsive-animated-login-signup-form/Dockerfile Responsive-animated-login-signup-form/
-            """
+            steps {
+                script {
+                    echo "🐳 Building Docker Image: $DOCKER_IMAGE"
+                    powershell """
+                        echo '🚀 Starting Docker Build...'
+                        docker build -t $DOCKER_IMAGE -f Responsive-animated-login-signup-form/Dockerfile Responsive-animated-login-signup-form/
+                    """
+                }
+            }
         }
-    }
-}
-
 
         stage('Push Docker Image') {
             steps {
@@ -43,8 +41,8 @@ pipeline {
                         powershell """
                             echo '🔄 Logging in to Docker Hub...'
                             docker login -u mohamedathikr -p qwerty786!A
-                            echo '🚀 Pushing Image: $env:DOCKER_IMAGE'
-                            docker push mohamedathikr/my-node-app:latest
+                            echo '🚀 Pushing Image: $DOCKER_IMAGE'
+                            docker push $DOCKER_IMAGE
                         """
                     }
                 }
@@ -52,24 +50,23 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-    steps {
-        bat '''
-        kubectl apply -f Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml
-        kubectl get pods
-        '''
-    }
-}
-
+            steps {
+                script {
+                    echo "🚀 Deploying to Kubernetes..."
+                    powershell """
+                        kubectl apply -f $K8S_DEPLOYMENT --validate=false
+                        kubectl get pods
+                    """
+                }
+            }
+        }
 
         stage('Verify Deployment') {
             steps {
                 script {
-                    echo "Verifying Kubernetes Deployment..."
+                    echo "✅ Verifying Kubernetes Deployment..."
                     powershell """
-                        echo 'Listing Pods...'
                         kubectl get pods
-                        echo 'Listing Services...'
-                        kubectl get svc
                     """
                 }
             }
