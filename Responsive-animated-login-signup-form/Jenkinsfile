@@ -53,11 +53,13 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
     steps {
-        sh '''
-        kubectl apply -f deployment.yaml
+        bat '''
+        kubectl apply -f Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml
         kubectl get pods
         '''
     }
+}
+
 }
 
 
