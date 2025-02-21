@@ -18,7 +18,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 echo "📥 Cloning repository..."
-                git branch: 'main', url: 'https://github.com/ATHIK05/DevOps_Task06.git'
+                git branch: 'main', url: 'https://github.com/Athik01/DevOps_Task06.git'
             }
         }
 
