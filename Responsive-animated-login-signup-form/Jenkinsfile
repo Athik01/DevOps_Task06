@@ -3,15 +3,15 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "mohamedathikr/my-node-app:latest"
-        K8S_DEPLOYMENT = "Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml"
-        K8S_SERVICE = "Responsive-animated-login-signup-form/k8s/node-app-service.yaml"
+        K8S_DEPLOYMENT = "node-app-deployment.yaml"
+        K8S_SERVICE = "node-app-service.yaml"
     }
 
     stages {
         stage('Cleanup Workspace') {
             steps {
                 echo "🧹 Cleaning workspace..."
-                cleanWs()
+                cleanWs() // Cleans workspace before fetching new code
             }
         }
 
@@ -23,16 +23,17 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "🐳 Building Docker Image: $env.DOCKER_IMAGE"
-                    powershell """
-                        echo '🚀 Starting Docker Build...'
-                        docker build -t $env:DOCKER_IMAGE -f Responsive-animated-login-signup-form/Dockerfile Responsive-animated-login-signup-form/
-                    """
-                }
-            }
+    steps {
+        script {
+            echo "🐳 Building Docker Image: $env.DOCKER_IMAGE"
+            powershell """
+                echo '🚀 Starting Docker Build...'
+                docker build -t mohamedathikr/my-node-app:latest -f Responsive-animated-login-signup-form/Dockerfile Responsive-animated-login-signup-form/
+            """
         }
+    }
+}
+
 
         stage('Push Docker Image') {
             steps {
@@ -41,9 +42,9 @@ pipeline {
                     withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
                         powershell """
                             echo '🔄 Logging in to Docker Hub...'
-                            docker login -u mohamedathikr -p \$env:DOCKER_PASSWORD
+                            docker login -u mohamedathikr -p qwerty786!A
                             echo '🚀 Pushing Image: $env:DOCKER_IMAGE'
-                            docker push $env:DOCKER_IMAGE
+                            docker push mohamedathikr/my-node-app:latest
                         """
                     }
                 }
@@ -51,31 +52,27 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                powershell """
-                    echo '🚀 Deploying to Kubernetes...'
-                    kubectl apply -f $env:K8S_DEPLOYMENT
-                    kubectl get pods
-                """
-            }
-        }
+    steps {
+        bat '''
+        kubectl apply -f Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml
+        kubectl get pods
+        '''
+    }
+}
+
 
         stage('Verify Deployment') {
             steps {
                 script {
-                    echo "🔍 Verifying Kubernetes Deployment..."
+                    echo "Verifying Kubernetes Deployment..."
                     powershell """
-                        echo '📌 Listing Pods...'
+                        echo 'Listing Pods...'
                         kubectl get pods
-                        echo '📌 Listing Services...'
+                        echo 'Listing Services...'
                         kubectl get svc
                     """
                 }
             }
         }
-    }
-
-    environment {
-        DOCKER_PASSWORD = credentials('docker-hub-password')
     }
 }
