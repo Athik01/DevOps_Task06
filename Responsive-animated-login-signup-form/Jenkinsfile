@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "mohamedathikr/my-node-app:latest"
-        // Deployment YAML file path
+        DOCKER_IMAGE   = "mohamedathikr/my-node-app:latest"
+        // Set your kubeconfig path globally so all stages can use it.
+        KUBECONFIG     = "C:\\Users\\rathi\\.kube\\config"
+        // Use the full path to your deployment YAML file.
         K8S_DEPLOYMENT = "Responsive-animated-login-signup-form/k8s/node-app-deployment.yaml"
     }
 
@@ -53,17 +55,11 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 powershell '''
-                    # Set KUBECONFIG to your valid kubeconfig file
-                    $env:KUBECONFIG = "C:\\Users\\rathi\\.kube\\config"
                     echo "Using kubeconfig: $env:KUBECONFIG"
-
-                    # List available contexts for verification
                     kubectl config get-contexts
-
-                    # If needed, switch to your desired context (replace <your-context> with the actual name)
-                    # kubectl config use-context <your-context>
-
-                    # Apply the deployment YAML without validation
+                    # Optionally, switch to the desired context (e.g., minikube) if required:
+                    # kubectl config use-context minikube
+                    echo "Deploying to Kubernetes..."
                     kubectl apply -f "$env:K8S_DEPLOYMENT" --validate=false
                     kubectl get pods
                 '''
@@ -74,6 +70,7 @@ pipeline {
             steps {
                 powershell '''
                     echo "Verifying Kubernetes Deployment..."
+                    echo "Using kubeconfig: $env:KUBECONFIG"
                     kubectl get pods
                 '''
             }
